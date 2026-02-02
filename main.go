@@ -5,8 +5,7 @@ import (
 	"net/http"
 
 	"gin-api/database"
-	redisclient "gin-api/redis"
-	routes "gin-api/routes"
+	"gin-api/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -22,8 +21,8 @@ func main() {
 	r := gin.Default()
 
 	// init redis
-	rdb := redisclient.NewRedisClient()
-	if err := rdb.Set(redisclient.Ctx, "test", "hello redis cloud", 0).Err(); err != nil {
+	database.InitRedis()
+	if err := database.RDB.Set(database.Ctx, "test", "hello redis cloud", 0).Err(); err != nil {
 		log.Fatal("Redis error:", err)
 	}
 
@@ -41,6 +40,7 @@ func main() {
 
 	// routes
 	routes.UserRoutes(r)
+	routes.SeatRoutes(r)
 
 	// run server
 	r.Run(":8080")

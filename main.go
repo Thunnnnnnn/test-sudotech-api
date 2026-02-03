@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"gin-api/config"
 	"gin-api/database"
 	"gin-api/routes"
 
@@ -31,6 +32,10 @@ func main() {
 		log.Fatal("Mongo connection failed:", err)
 	}
 
+	if err := config.GoogleOAuthInit(); err != nil {
+		log.Fatal("Google OAuth initialization failed:", err)
+	}
+
 	// health check
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -41,6 +46,7 @@ func main() {
 	// routes
 	routes.UserRoutes(r)
 	routes.SeatRoutes(r)
+	routes.AuthRoutes(r)
 
 	// run server
 	r.Run(":8080")

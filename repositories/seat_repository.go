@@ -115,7 +115,7 @@ func ReleaseSeat(seatID string, lockKey string, token string) error {
 func BookSeat(seatID string) error {
 	lockKey := "lock:seat:" + seatID
 
-	_, err := AcquireLock(lockKey, 1*time.Minute)
+	_, err := AcquireLock(lockKey, 5*time.Minute)
 
 	if err != nil {
 		return errors.New("มีคนกำลังจองอยู่")

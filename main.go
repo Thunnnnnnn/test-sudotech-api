@@ -10,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	socketio "github.com/googollee/go-socket.io"
 )
 
 func main() {
@@ -35,6 +37,16 @@ func main() {
 	if err := config.GoogleOAuthInit(); err != nil {
 		log.Fatal("Google OAuth initialization failed:", err)
 	}
+
+	server := socketio.NewServer(nil)
+
+	server.OnConnect("/", func(s socketio.Conn) error {
+		log.Println("connected:", s.ID())
+		return nil
+	})
+
+	http.Handle("/socket.io/", server)
+	http.ListenAndServe(":3000", nil)
 
 	// health check
 	r.GET("/", func(c *gin.Context) {

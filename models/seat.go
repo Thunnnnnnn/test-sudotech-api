@@ -14,4 +14,5 @@ type Seat struct {
 	BookedAt    *time.Time         `bson:"booked_at,omitempty"`
 	ExpiredAt   *time.Time         `bson:"expired_at,omitempty"`
 	AlreadySold bool               `bson:"already_sold" json:"already_sold" default:"false"`
+	TheaterID   primitive.ObjectID `bson:"theater_id" json:"theater_id"`
 }

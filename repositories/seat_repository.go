@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -37,6 +38,10 @@ func FindAllSeats() ([]models.Seat, error) {
 }
 
 func CreateSeat(seat models.Seat) (models.Seat, error) {
+	fmt.Println("Creating seat:", seat)
+	theaterID, _ := primitive.ObjectIDFromHex(seat.TheaterID.Hex())
+
+	fmt.Println("Theater ID:", theaterID)
 	_, err := database.SeatCollection.InsertOne(
 		context.Background(),
 		bson.M{
@@ -46,6 +51,7 @@ func CreateSeat(seat models.Seat) (models.Seat, error) {
 			"already_sold": seat.AlreadySold,
 			"booked_at":    time.Now(),
 			"expired_at":   time.Now(),
+			"theater_id":   theaterID,
 		},
 	)
 

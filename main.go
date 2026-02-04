@@ -45,20 +45,26 @@ func main() {
 		return nil
 	})
 
-	http.Handle("/socket.io/", server)
-	http.ListenAndServe(":3000", nil)
+	go func() {
+		if err := server.Serve(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	defer server.Close()
 
-	// health check
+	r.GET("/socket.io/*any", gin.WrapH(server))
+	r.POST("/socket.io/*any", gin.WrapH(server))
+
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Hello Gin 🚀",
 		})
 	})
-
 	// routes
 	routes.UserRoutes(r)
 	routes.SeatRoutes(r)
 	routes.AuthRoutes(r)
+	routes.TheaterRoutes(r)
 
 	// run server
 	r.Run(":8080")

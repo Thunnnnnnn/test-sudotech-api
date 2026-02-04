@@ -3,7 +3,9 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 
 	"gin-api/config"
 	"gin-api/helpers"
@@ -42,6 +44,9 @@ func GoogleLogin(c *gin.Context) {
 
 func GoogleCallback(c *gin.Context) {
 	code := c.Query("code")
+
+	fmt.Println("RAW CODE:", code)
+
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "code not found"})
 		return
@@ -82,10 +87,9 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"token": jwtToken,
-		"data":  user,
-		"code":  http.StatusOK,
-	})
+	c.Redirect(
+		http.StatusSeeOther,
+		os.Getenv("WEB_URL")+"/oauth/callback?token="+jwtToken,
+	)
 
 }

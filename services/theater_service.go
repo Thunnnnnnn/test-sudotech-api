@@ -12,3 +12,7 @@ func GetTheaters() ([]models.Theater, error) {
 func CreateTheater(theater models.Theater) (models.Theater, error) {
 	return repositories.CreateTheater(theater)
 }
+
+func GetTheaterByID(id string) (models.Theater, error) {
+	return repositories.FindTheaterByID(id)
+}

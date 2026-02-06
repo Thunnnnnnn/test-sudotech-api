@@ -30,6 +30,7 @@ func FindOrCreateGoogleUser(google map[string]interface{}) (models.User, error) 
 		FullName:      helpers.GetString(google, "name"),
 		Picture:       helpers.GetString(google, "picture"),
 		VerifiedEmail: helpers.GetBool(google, "verified_email"),
+		Role:          "USER",
 	}
 
 	return repositories.CreateUser(newUser)

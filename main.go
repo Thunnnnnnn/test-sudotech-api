@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"gin-api/config"
 	"gin-api/database"
 	"gin-api/routes"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
@@ -22,6 +24,22 @@ func main() {
 
 	// init gin
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+		},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Authorization",
+			"Bearer-Token",
+		},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// init redis
 	database.InitRedis()

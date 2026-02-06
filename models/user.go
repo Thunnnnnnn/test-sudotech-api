@@ -10,4 +10,5 @@ type User struct {
 	Surname       string             `bson:"surname" json:"surname"`
 	Picture       string             `bson:"picture" json:"picture"`
 	VerifiedEmail bool               `bson:"verified_email" json:"verified_email"`
+	Role          string             `bson:"role" json:"role"`
 }

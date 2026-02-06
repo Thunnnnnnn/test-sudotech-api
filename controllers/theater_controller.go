@@ -32,3 +32,13 @@ func CreateTheater(c *gin.Context) {
 
 	c.JSON(201, gin.H{"code": 201, "message": "สร้างที่โรงภาพยนตร์สำเร็จ"})
 }
+
+func GetTheater(c *gin.Context) {
+	theaterID := c.Param("id")
+	theater, err := services.GetTheaterByID(theaterID)
+	if err != nil {
+		c.JSON(500, gin.H{"code": 500, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"code": 200, "data": theater})
+}

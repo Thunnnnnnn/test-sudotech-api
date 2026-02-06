@@ -10,7 +10,7 @@ import (
 	"gin-api/database"
 	"gin-api/models"
 
-	"github.com/google/uuid"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,20 +58,21 @@ func CreateSeat(seat models.Seat) (models.Seat, error) {
 	return seat, err
 }
 
-func AcquireLock(key string, ttl time.Duration) (string, error) {
-	rdb := database.RDB
-	token := uuid.NewString()
+func AcquireLock(key string, ttl time.Duration, userID string) (string, error) {
+	ctx := context.Background()
 
-	ok, err := rdb.SetNX(context.Background(), key, token, ttl).Result()
+	value := fmt.Sprintf("%s", userID)
 
+	ok, err := database.RDB.SetNX(ctx, key, value, ttl).Result()
 	if err != nil {
 		return "", err
 	}
+
 	if !ok {
-		return "", errors.New("lock already exists")
+		return "", errors.New("seat is already locked")
 	}
 
-	return token, nil
+	return value, nil
 }
 
 func FindByID(seatID string) (models.Seat, error) {
@@ -100,28 +101,39 @@ func ReleaseLock(key, token string) {
 	unlockScript.Run(context.Background(), rdb, []string{key}, token)
 }
 
-func ReleaseSeat(seatID string, lockKey string, token string) error {
-	objectID, err := primitive.ObjectIDFromHex(seatID)
-	rdb := database.RDB
-	ttl, _ := rdb.TTL(context.Background(), lockKey).Result()
+func ReleaseSeat(seatID string, userID string) error {
+	key := "lock:seat:" + seatID
 
-	if ttl <= 0 {
-		_, err = database.SeatCollection.UpdateByID(
-			context.Background(),
-			objectID,
-			bson.M{"$set": bson.M{"is_booked": false}},
-		)
-
+	ctx := context.Background()
+	val, err := database.RDB.Get(ctx, key).Result()
+	if err != nil {
 		return err
-	} else {
-		return errors.New("มีคนกำลังจองอยู่")
 	}
+
+	expected := fmt.Sprintf("%s", userID)
+
+	if val != expected {
+		return errors.New("not lock owner")
+	}
+
+	return database.RDB.Del(ctx, key).Err()
 }
 
-func BookSeat(seatID string) error {
-	lockKey := "lock:seat:" + seatID
+func BookSeat(c *gin.Context, seatID string) error {
+	userIDValue, exists := c.Get("user_id")
 
-	_, err := AcquireLock(lockKey, 5*time.Minute)
+	if !exists {
+		return errors.New("user not found in context")
+	}
+
+	haveSeat := ReleaseSeat(seatID, userIDValue.(string))
+
+	if haveSeat == nil {
+		return errors.New("คุณจองเก้าอี้นี้อยู่")
+	}
+
+	lockKey := "lock:seat:" + seatID
+	_, err := AcquireLock(lockKey, 5*time.Minute, userIDValue.(string))
 
 	if err != nil {
 		return errors.New("มีคนกำลังจองอยู่")
@@ -140,7 +152,8 @@ func BookSeat(seatID string) error {
 			objID,
 			bson.M{
 				"$set": bson.M{
-					"is_booked": false,
+					"booked_at":  nil,
+					"expired_at": nil,
 				},
 				"$unset": bson.M{
 					"booked_at":  "",
@@ -155,6 +168,57 @@ func BookSeat(seatID string) error {
 		context.Background(),
 		objID,
 		bson.M{"$set": bson.M{"booked_at": time.Now(), "expired_at": expire}},
+	)
+
+	return err
+}
+
+func ConfirmSeat(c *gin.Context, seatID string) error {
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		return errors.New("user not found in context")
+	}
+
+	lockKey := "lock:seat:" + seatID + ":user_id:" + userIDValue.(string)
+
+	objectID, err := primitive.ObjectIDFromHex(seatID)
+	if err != nil {
+		return err
+	}
+
+	_, err = database.SeatCollection.UpdateByID(
+		context.Background(),
+		objectID,
+		bson.M{"$set": bson.M{"already_sold": true}},
+	)
+
+	ReleaseLock(lockKey, "")
+
+	return err
+}
+
+func CancelSeat(c *gin.Context, seatID string) error {
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		return errors.New("user not found in context")
+	}
+
+	lockKey := "lock:seat:" + seatID + ":user_id:" + userIDValue.(string)
+
+	ReleaseLock(lockKey, "")
+
+	objID, _ := primitive.ObjectIDFromHex(seatID)
+
+	// seat, err := FindByID(seatID)
+
+	// now := time.Now()
+	// expire := now.Add(1 * time.Minute)
+	_, err := database.SeatCollection.UpdateByID(
+		context.Background(),
+		objID,
+		bson.M{"$set": bson.M{"booked_at": time.Now().Add(time.Minute * -5), "expired_at": time.Now().Add(time.Minute * -5)}},
 	)
 
 	return err

@@ -14,5 +14,7 @@ func SeatRoutes(r *gin.Engine) {
 		seats.GET("", controllers.GetSeats)
 		seats.POST("", controllers.CreateSeat)
 		seats.POST("/book/:id", controllers.BookSeat)
+		seats.POST("/cancel/:id", controllers.CancelSeatBooking)
+		seats.POST("/confirm/:id", controllers.ConfirmSeatBooking)
 	}
 }

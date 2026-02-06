@@ -35,7 +35,7 @@ func CreateSeat(c *gin.Context) {
 
 func BookSeat(c *gin.Context) {
 	seatID := c.Param("id")
-	err := services.BookSeat(seatID)
+	err := services.BookSeat(c, seatID)
 	if err != nil {
 		if err.Error() == "มีคนกำลังจองอยู่" {
 			c.JSON(400, gin.H{
@@ -44,9 +44,37 @@ func BookSeat(c *gin.Context) {
 			})
 			return
 		}
+
+		if err.Error() == "คุณจองเก้าอี้นี้อยู่" {
+			c.JSON(200, gin.H{
+				"code":    200,
+				"message": "คุณจองเก้าอี้นี้อยู่",
+			})
+			return
+		}
 		c.JSON(500, gin.H{"code": 500, "message": err.Error()})
 		return
 	}
 
 	c.JSON(200, gin.H{"code": 200, "message": "จองที่นั่งสำเร็จ"})
+}
+
+func CancelSeatBooking(c *gin.Context) {
+	seatID := c.Param("id")
+	err := services.CancelSeatBooking(c, seatID)
+	if err != nil {
+		c.JSON(500, gin.H{"code": 500, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"code": 200, "message": "ยกเลิกการจองที่นั่งสำเร็จ"})
+}
+
+func ConfirmSeatBooking(c *gin.Context) {
+	seatID := c.Param("id")
+	err := services.ConfirmSeatBooking(c, seatID)
+	if err != nil {
+		c.JSON(500, gin.H{"code": 500, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"code": 200, "message": "ยืนยันการจองที่นั่งสำเร็จ"})
 }

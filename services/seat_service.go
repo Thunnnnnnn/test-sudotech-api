@@ -4,6 +4,8 @@ import (
 	"gin-api/models"
 
 	"gin-api/repositories"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetSeats() ([]models.Seat, error) {
@@ -14,6 +16,14 @@ func CreateSeat(seat models.Seat) (models.Seat, error) {
 	return repositories.CreateSeat(seat)
 }
 
-func BookSeat(seatID string) error {
-	return repositories.BookSeat(seatID)
+func BookSeat(c *gin.Context, seatID string) error {
+	return repositories.BookSeat(c, seatID)
+}
+
+func CancelSeatBooking(c *gin.Context, seatID string) error {
+	return repositories.CancelSeat(c, seatID)
+}
+
+func ConfirmSeatBooking(c *gin.Context, seatID string) error {
+	return repositories.ConfirmSeat(c, seatID)
 }

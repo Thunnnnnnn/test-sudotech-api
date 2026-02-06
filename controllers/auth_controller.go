@@ -23,6 +23,11 @@ type GoogleUser struct {
 	VerifiedEmail bool
 }
 
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
 func (g *GoogleUser) BindJSON(obj interface{}) error {
 	data, ok := obj.(map[string]interface{})
 	if !ok {
@@ -91,5 +96,10 @@ func GoogleCallback(c *gin.Context) {
 		http.StatusSeeOther,
 		os.Getenv("WEB_URL")+"/oauth/callback?token="+jwtToken,
 	)
+}
 
+func Logout(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "logout successful",
+	})
 }

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=development
+    volumes:
+      - .:/app
+    command: go run main.go
+
+  # Add more services as needed

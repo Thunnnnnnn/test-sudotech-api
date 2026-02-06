@@ -11,6 +11,7 @@ import (
 
 var UserCollection *mongo.Collection
 var SeatCollection *mongo.Collection
+var TheaterCollection *mongo.Collection
 
 func ConnectMongo() error {
 	mongoURI := os.Getenv("MONGODB_URI")
@@ -28,6 +29,7 @@ func ConnectMongo() error {
 
 	UserCollection = client.Database("testdb").Collection("users")
 	SeatCollection = client.Database("testdb").Collection("seats")
+	TheaterCollection = client.Database("testdb").Collection("theaters")
 
 	return nil
 }
